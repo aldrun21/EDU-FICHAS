@@ -15,37 +15,85 @@ export const CloudflareExportModal: React.FC<CloudflareExportModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const [isExporting, setIsExporting] = useState(false);
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleDownloadStandaloneHTML = () => {
-    const html = generateStandaloneHTML(worksheet);
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${worksheet.title.toLowerCase().replace(/\s+/g, '-')}-interactiva.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const prepareSelfContainedWorksheet = async (ws: WorksheetData): Promise<WorksheetData> => {
+    if (!ws.imageUrl || ws.imageUrl.startsWith('data:')) {
+      return ws;
+    }
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const loaded = await new Promise<boolean>((resolve) => {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = ws.imageUrl;
+      });
+      if (loaded && img.naturalWidth > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          return { ...ws, imageUrl: dataUrl };
+        }
+      }
+    } catch (e) {
+      console.warn('Could not embed image as data URL:', e);
+    }
+    return ws;
   };
 
-  const handleDownloadJSON = () => {
-    const jsonStr = JSON.stringify(worksheet, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${worksheet.title.toLowerCase().replace(/\s+/g, '-')}-plantilla.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleDownloadStandaloneHTML = async () => {
+    setIsExporting(true);
+    try {
+      const readySheet = await prepareSelfContainedWorksheet(worksheet);
+      const html = generateStandaloneHTML(readySheet);
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${worksheet.title.toLowerCase().replace(/\s+/g, '-')}-interactiva.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  const handleCopyHTML = () => {
-    const html = generateStandaloneHTML(worksheet);
-    navigator.clipboard.writeText(html);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleDownloadJSON = async () => {
+    setIsExporting(true);
+    try {
+      const readySheet = await prepareSelfContainedWorksheet(worksheet);
+      const jsonStr = JSON.stringify(readySheet, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${worksheet.title.toLowerCase().replace(/\s+/g, '-')}-plantilla.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleCopyHTML = async () => {
+    setIsExporting(true);
+    try {
+      const readySheet = await prepareSelfContainedWorksheet(worksheet);
+      const html = generateStandaloneHTML(readySheet);
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

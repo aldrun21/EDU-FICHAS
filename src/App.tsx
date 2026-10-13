@@ -36,7 +36,19 @@ export default function App() {
     const saved = localStorage.getItem('edufichas_current_sheet');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Find if this is a sample worksheet to ensure valid bundled imageUrl
+        const matched = SAMPLE_WORKSHEETS.find(s => s.id === parsed.id);
+        if (matched) {
+          return {
+            ...parsed,
+            imageUrl: matched.imageUrl,
+          };
+        }
+        if (parsed.imageUrl && parsed.imageUrl.startsWith('/src/assets/')) {
+          return SAMPLE_WORKSHEETS[0];
+        }
+        return parsed;
       } catch (e) {
         // fallback
       }
@@ -422,7 +434,10 @@ export default function App() {
                 <button
                   key={sample.id}
                   onClick={() => {
-                    setWorksheet(sample);
+                    setWorksheet({
+                      ...sample,
+                      elements: sample.elements.map(el => ({ ...el }))
+                    });
                     setSelectedElementId(null);
                     resetStudentState();
                     setShowSampleSelector(false);

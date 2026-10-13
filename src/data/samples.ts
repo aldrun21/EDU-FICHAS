@@ -1,4 +1,8 @@
 import { WorksheetData } from '../types';
+import worksheetPlantas from '../assets/images/worksheet_plantas_1791817540674.jpg';
+import worksheetMates from '../assets/images/worksheet_mates_1791817550393.jpg';
+
+export { worksheetPlantas, worksheetMates };
 
 export const SAMPLE_WORKSHEETS: WorksheetData[] = [
   {
@@ -7,7 +11,7 @@ export const SAMPLE_WORKSHEETS: WorksheetData[] = [
     subject: 'Ciencias Naturales',
     grade: '1° y 2° Primaria',
     instructions: 'Observa la ilustración de la planta y escribe el nombre de cada parte en los recuadros en blanco.',
-    imageUrl: '/src/assets/images/worksheet_plantas_1791817540674.jpg',
+    imageUrl: worksheetPlantas,
     elements: [
       {
         id: 'elem-flor',
@@ -79,7 +83,7 @@ export const SAMPLE_WORKSHEETS: WorksheetData[] = [
     subject: 'Matemáticas',
     grade: '2° Primaria',
     instructions: 'Resuelve las sumas en los recuadros vacíos y une con líneas cada suma con su resultado correcto.',
-    imageUrl: '/src/assets/images/worksheet_mates_1791817550393.jpg',
+    imageUrl: worksheetMates,
     elements: [
       // Left side text answers
       {

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { InteractiveElement, LineConnection } from '../types';
-import { Check, X, Move, ChevronDown, Link2, Sparkles } from 'lucide-react';
+import { Check, X, Move, ChevronDown, Link2, Sparkles, AlertCircle } from 'lucide-react';
+import { worksheetPlantas, worksheetMates } from '../data/samples';
 
 interface WorksheetCanvasProps {
   mode: 'editor' | 'student';
@@ -40,6 +41,22 @@ export const WorksheetCanvas: React.FC<WorksheetCanvasProps> = ({
   zoomLevel = 1.0,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Base Image Loading and Fallback state
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [currentImgSrc, setCurrentImgSrc] = useState(imageUrl);
+
+  useEffect(() => {
+    // If imageUrl points to an old unbundled /src/assets/ path, immediately resolve to imported asset
+    if (imageUrl.includes('plantas')) {
+      setCurrentImgSrc(worksheetPlantas);
+    } else if (imageUrl.includes('mates')) {
+      setCurrentImgSrc(worksheetMates);
+    } else {
+      setCurrentImgSrc(imageUrl);
+    }
+    setImageLoadError(false);
+  }, [imageUrl]);
 
   // Dragging & Resizing state (Editor Mode)
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -193,12 +210,59 @@ export const WorksheetCanvas: React.FC<WorksheetCanvasProps> = ({
           }}
         >
         {/* Base Worksheet Image */}
-        <img
-          src={imageUrl}
-          alt="Hoja de trabajo"
-          className="w-full h-auto block pointer-events-none"
-          draggable={false}
-        />
+        {imageLoadError ? (
+          <div className="w-full min-h-[500px] flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed border-slate-300 text-center">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">No se pudo cargar la imagen de la ficha</h3>
+            <p className="text-sm text-slate-500 max-w-md mb-6">
+              La imagen de fondo no se encuentra disponible. Puedes recargar una plantilla educativa o subir tu propia ficha.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageLoadError(false);
+                  setCurrentImgSrc(worksheetPlantas);
+                }}
+                className="px-4 py-2 bg-[#392a79] text-white text-xs font-semibold rounded-md shadow-xs hover:bg-[#2b1f5e] transition-colors cursor-pointer"
+              >
+                Cargar Plantilla de Ciencias
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageLoadError(false);
+                  setCurrentImgSrc(worksheetMates);
+                }}
+                className="px-4 py-2 bg-[#52b68e] text-[#0d3824] text-xs font-semibold rounded-md shadow-xs hover:bg-[#43a27c] transition-colors cursor-pointer"
+              >
+                Cargar Plantilla de Matemáticas
+              </button>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={currentImgSrc}
+            alt="Hoja de trabajo"
+            className="w-full h-auto block pointer-events-none"
+            draggable={false}
+            onError={() => {
+              if (currentImgSrc.includes('plantas') && currentImgSrc !== worksheetPlantas) {
+                setCurrentImgSrc(worksheetPlantas);
+                return;
+              }
+              if (currentImgSrc.includes('mates') && currentImgSrc !== worksheetMates) {
+                setCurrentImgSrc(worksheetMates);
+                return;
+              }
+              setImageLoadError(true);
+            }}
+          />
+        )}
 
         {/* SVG Layer for Drawing & Rendered Connections */}
         <svg
