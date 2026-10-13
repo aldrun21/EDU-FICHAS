@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Print styling for teachers and students */
+@media print {
+  header, footer, nav, button, .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .stage-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

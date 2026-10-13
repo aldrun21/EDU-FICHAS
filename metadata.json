@@ -1,0 +1,6 @@
+{
+  "name": "EduFichas Interactivas",
+  "description": "Creador y visor de hojas de trabajo y fichas educativas interactivas de primaria: celdas de autollenado, listas de selección y unión de puntos interactiva.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
